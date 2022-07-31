@@ -1,0 +1,137 @@
+@base <http://example.org/> .
+@prefix ex: <http://example.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix shapes: <https://github.com/International-Data-Spaces-Association/InformationModel/tree/master/testing/> .
+
+shapes:
+	a owl:Ontology ;
+	sh:declare [
+		sh:prefix "rdf" ;
+		sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ;
+	] ;
+
+	sh:declare [
+		sh:prefix "ex" ;
+		sh:namespace "http://example.org/"^^xsd:anyURI ;
+	] ;
+.
+
+
+# Classes
+ex:AbstractMessage
+  a owl:Class ;
+  rdfs:label "A message in our example."@en .
+
+ex:Message
+  a owl:Class ;
+  rdfs:subClassOf ex:AbstractMessage ;
+  rdfs:label "A message in our example."@en .
+
+ex:Agent
+  a owl:Class ;
+  rdfs:label "An Agent in our example."@en .
+
+ex:MessageType
+  a owl:Class ;
+  rdfs:label "Specifies the type of a message in our example."@en .
+
+
+# Properties
+ex:sender
+  a owl:ObjectProperty ;
+  rdfs:domain ex:Message ;
+  rdfs:range ex:Agent ;
+  rdfs:label "Links the Agent who sends a message to this message."@en .
+
+ex:receiver
+  a owl:ObjectProperty ;
+  rdfs:domain ex:Message ;
+  rdfs:range ex:Agent ;
+  rdfs:label "Links the Agent who shall receive a message to this message."@en .
+
+ex:messageType
+  a owl:ObjectProperty ;
+  rdfs:domain ex:Message ;
+  #rdfs:range ex:MessageType ;
+  rdfs:label "Links a Message to the specified type for the message."@en .
+
+ex:name
+  a owl:DatatypeProperty ;
+  rdfs:domain ex:Agent ;
+ # rdfs:range xsd:string ;
+  rdfs:label "Name of the example agent."@en .
+
+ex:workingId
+  a owl:DatatypeProperty ;
+  rdfs:domain ex:Agent ;
+# rdfs:range xsd:int ;
+  rdfs:label "WorkingId of the example agent."@en .
+
+
+# Individuals
+ex:REQUEST_MESSAGE
+  a ex:MessageType ;
+  rdfs:label "A message containing a request."@en .
+
+ex:OFFER_MESSAGE
+  a ex:MessageType ;
+  rdfs:label "A message containing an offer."@en .
+
+
+# Shapes
+shapes:AbstractMessageShape
+  a sh:NodeShape ;
+  sh:targetClass ex:AbstractMessage ;
+  sh:sparql [
+      a sh:SPARQLConstraint ;
+      sh:message "A ex:AbstractMessage is an abstract class. Please use one of the subclasses for the generation of instances."@en ;
+      sh:prefixes shapes: ;
+      sh:select """
+          SELECT ?this ?type
+          WHERE {
+              ?this rdf:type ?type .
+              FILTER (?type = ex:AbstractMessage)
+          }
+          """ ;
+  ] .
+
+shapes:MessageShape
+  a sh:NodeShape ;
+  sh:targetClass ex:Message ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path ex:sender ;
+    sh:class ex:Agent ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:severity sh:Violation ;
+    sh:message "The ex:sender property must link from a ex:Message to an ex:Agent." ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path ex:receiver ;
+    sh:or (
+      [ sh:class ex:Agent ; ]
+      [ sh:nodeKind sh:IRI ; ]
+    ) ;
+    sh:minCount 1 ;
+    sh:severity sh:Violation ;
+    sh:message "The ex:sender property must link from a ex:Message to an ex:Agent." ;
+  ] .
+
+shapes:AgentShape
+  a sh:NodeShape ;
+  sh:targetClass ex:Agent ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path ex:name ;
+    sh:datatype xsd:string ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:severity sh:Violation ;
+    sh:message "The ex:name property must link from an ex:Agent to exactly one xsd:string." ;
+  ] .
